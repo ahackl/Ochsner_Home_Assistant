@@ -1,1 +1,1047 @@
-[{"id":"21ef1ae50a97d1a7","type":"tab","label":"Ochsner Datenlogger","disabled":false,"info":"","env":[]},{"id":"de764250bf3ce744","type":"inject","z":"21ef1ae50a97d1a7","name":"","props":[{"p":"payload"},{"p":"topic","vt":"str"}],"repeat":"300","crontab":"","once":false,"onceDelay":0.1,"topic":"","payload":"","payloadType":"date","x":270,"y":60,"wires":[["827182aede622f47"]]},{"id":"827182aede622f47","type":"function","z":"21ef1ae50a97d1a7","name":"Parameter list","func":"var msgList = [];\n\nvar commandList = {\n    \"heat pump: Thermal energy kWh\": \"1/2/1/125/9\",\n    \"heat pump: Thermal energy MWh\": \"1/2/1/125/10\",\n    \"heat pump: Energy DHW kWh\": \"1/2/1/125/11\",\n    \"heat pump: Energy DHW MWh\": \"1/2/1/125/12\",\n    \"heating circuit: State heating circuit control\": \"1/2/4/119/0\",\n    \"heating circuit: Outdoor temperature\": \"1/2/4/119/1\",\n    \"heating circuit: Outdoor temperature average value\": \"1/2/4/119/2\",\n    \"heating circuit: Setpoint room temperature\": \"1/2/4/119/3\",\n    \"heating circuit: Actual heating circuit flow temperature\": \"1/2/4/119/4\",\n    \"heating circuit: Setpoint heating circuit flow temperature\": \"1/2/4/119/5\",\n    \"DHW: State DHW control\": \"1/2/7/121/0\",\n    \"DHW: Actual DHW temperature\": \"1/2/7/121/1\",\n    \"DHW: DHW setpoint\": \"1/2/7/121/2\",\n };\n\nvar count = Object.keys(commandList).length;\n\nfor (var i=0;i<count;i++) {\n    var firstKey = Object.keys(commandList)[i];\n    var firstValue = commandList[firstKey];\n    var outputMsg = {\n        \"commandName\": firstKey,\n        \"commandId\": firstValue\n    };\n    msgList.push({payload:outputMsg})\n}\nreturn [msgList];","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":260,"y":120,"wires":[["2a5bcdb6aed36c67"]]},{"id":"26204111a9c07bde","type":"function","z":"21ef1ae50a97d1a7","name":"SOAP Params","func":"msg.commandId = msg.payload.commandId;\nmsg.commandName = msg.payload.commandName;\n\nmsg.headers = {};\nmsg.headers={ \n    'Content-Type': 'text/xml'\n};\n\nmsg.payload ='<?xml version=\"1.0\" encoding=\"UTF-8\"?>'+'\\n'\nmsg.payload+='<SOAP-ENV:Envelope'+'\\n'\nmsg.payload+='xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"'+'\\n'\nmsg.payload+='xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\"'+'\\n'\nmsg.payload+='xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"'+'\\n'\nmsg.payload+='xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"'+'\\n'\nmsg.payload+='xmlns:ns=\"http://ws01.lom.ch/soap/\">'+'\\n'\nmsg.payload+='<SOAP-ENV:Body>'+'\\n'\nmsg.payload+='<ns:getDpRequest>'+'\\n'\nmsg.payload+='<ref>'+'\\n'\nmsg.payload+='<oid>'+msg.commandId+'</oid>'+'\\n'\nmsg.payload+='<prop/>'+'\\n'\nmsg.payload+='</ref>'+'\\n'\nmsg.payload+='<startIndex>0</startIndex>'+'\\n'\nmsg.payload+='<count>20</count>'+'\\n'\nmsg.payload+='</ns:getDpRequest>'+'\\n'\nmsg.payload+='</SOAP-ENV:Body>'+'\\n';\nmsg.payload+='</SOAP-ENV:Envelope>'+'\\n';\n\n\nreturn msg","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":260,"y":240,"wires":[["78dc706d803d3c1a"]]},{"id":"78dc706d803d3c1a","type":"http request","z":"21ef1ae50a97d1a7","name":"","method":"POST","ret":"txt","paytoqs":"ignore","url":"http://192.168.188.50/ws","tls":"","persist":false,"proxy":"","insecureHTTPParser":false,"authType":"digest","senderr":false,"headers":[],"x":270,"y":300,"wires":[["93fc9f62d9ed586c"]]},{"id":"93fc9f62d9ed586c","type":"xml","z":"21ef1ae50a97d1a7","name":"","property":"payload","attr":"","chr":"","x":290,"y":360,"wires":[["3cdf6ba2fa8d0d84"]]},{"id":"3cdf6ba2fa8d0d84","type":"function","z":"21ef1ae50a97d1a7","name":"Extract value","func":"var payload=msg.payload;\n\nvar NewMsg={};\nNewMsg.payload = {\n    \"commandName\": msg.commandName,\n    \"state\" : Number(payload[\"SOAP-ENV:Envelope\"][\"SOAP-ENV:Body\"][0][\"ns:getDpResponse\"][0].dpCfg[0].value[0])\n};\n\nreturn NewMsg;","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":290,"y":420,"wires":[["f7e67051f5d7fe8e","84edd03f6a8c19ca","ae05f0c6686f1c40","a31aa3de4f6283f4"]]},{"id":"2a5bcdb6aed36c67","type":"delay","z":"21ef1ae50a97d1a7","name":"","pauseType":"rate","timeout":"5","timeoutUnits":"seconds","rate":"1","nbRateUnits":"5","rateUnits":"second","randomFirst":"1","randomLast":"5","randomUnits":"seconds","drop":false,"allowrate":false,"outputs":1,"x":240,"y":180,"wires":[["26204111a9c07bde"]]},{"id":"f7e67051f5d7fe8e","type":"switch","z":"21ef1ae50a97d1a7","name":"","property":"payload.commandName","propertyType":"msg","rules":[{"t":"eq","v":"heat pump: Thermal energy kWh","vt":"str"},{"t":"eq","v":"heat pump: Thermal energy MWh","vt":"str"}],"checkall":"false","repair":false,"outputs":2,"x":490,"y":260,"wires":[["04ab5286cc606ce5"],["04ab5286cc606ce5"]]},{"id":"563741e30b26bc72","type":"comment","z":"21ef1ae50a97d1a7","name":"Paramter list","info":"    \"heat pump: State heat generator control\": \"/1/2/1/125/0\",\n    \"heat pump: Flow temperature heat generator\": \"/1/2/1/125/1\",\n    \"heat pump: Return flow temperature heat generator\": \"/1/2/1/125/2\",\n    \"heat pump: Heat source outlet temperature\": \"/1/2/1/125/3\",\n    \"heat pump: Heat source inlet temperature\": \"/1/2/1/125/4\",\n    \"heat pump: Operation cycles\": \"/1/2/1/125/5\",\n    \"heat pump: Operation hours\": \"/1/2/1/125/6\",\n    \"heat pump: Volume flow heat energy\": \"/1/2/1/125/7\",\n    \"heat pump: Flow rate heat source\": \"/1/2/1/125/8\",\n    \"heat pump: Thermal energy kWh\": \"1/2/1/125/9\",\n    \"heat pump: Thermal energy MWh\": \"1/2/1/125/10\",\n    \"heat pump: Energy DHW kWh\": \"1/2/1/125/11\",\n    \"heat pump: Energy DHW MWh\": \"1/2/1/125/12\",\n    \"auxiliary: State heat generator control\": \"/1/2/2/126/0\",\n    \"auxiliary: Flow temperature heat generator\": \"/1/2/2/126/1\",\n    \"auxiliary: Operation cycles\": \"/1/2/2/126/2\",\n    \"auxiliary: Operation hours\": \"/1/2/2/126/3\",\n    \"auxiliary: Thermal energy kWh\": \"/1/2/2/126/3\",\n    \"auxiliary: Thermal energy MWh\": \"/1/2/2/126/3\",\n    \"heating circuit: State heating circuit control\": \"1/2/4/119/0\",\n    \"heating circuit: Outdoor temperature\": \"1/2/4/119/1\",\n    \"heating circuit: Outdoor temperature average value\": \"1/2/4/119/2\",\n    \"heating circuit: Setpoint room temperature\": \"1/2/4/119/3\",\n    \"heating circuit: Actual heating circuit flow temperature\": \"1/2/4/119/4\",\n    \"heating circuit: Setpoint heating circuit flow temperature\": \"1/2/4/119/5\",\n    \"DHW: State DHW control\": \"1/2/7/121/0\",\n    \"DHW: Actual DHW temperature\": \"1/2/7/121/1\",\n    \"DHW: DHW setpoint\": \"1/2/7/121/2\",\n    \"Manager: Storage tank temperature center\": \"1/2/8/122/1\",\n    \"Manager: Plant flow temperature\": \"1/2/8/122/2\",\n    \"Manager: Plant CH setpoint flow temperature\": \"1/2/8/122/3\",\n    \"Manager: Heating power in heating mode\": \"1/2/8/122/4\",\n    \"Manager: Heating power in DHW mode\": \"1/2/8/122/5\",\n    \"Manager: State heating manager\": \"1/2/8/122/6\",\n    \"Manager: Storage tank temperature top\": \"1/2/8/122/6\",","x":490,"y":120,"wires":[]},{"id":"04ab5286cc606ce5","type":"join","z":"21ef1ae50a97d1a7","name":"join kWh & MWh","mode":"custom","build":"array","property":"payload","propertyType":"msg","key":"topic","joiner":"\\n","joinerType":"str","accumulate":false,"timeout":"","count":"2","reduceRight":false,"reduceExp":"","reduceInit":"","reduceInitType":"num","reduceFixup":"","x":670,"y":260,"wires":[["896b506461f3d464"]]},{"id":"896b506461f3d464","type":"function","z":"21ef1ae50a97d1a7","name":"energy total ","func":"var count = Object.keys(msg.payload).length;\n\nvar NewMsg = {};\nif (count == 2)\n{\n    var energy = msg.payload[0].state + 1000 * msg.payload[1].state; \n    NewMsg.payload = {\n        \"commandName\": \"heat pump: Thermal energy total kWh\",\n        \"state\": energy\n    };\n};\nreturn NewMsg;\n","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":870,"y":260,"wires":[["e889015e323f42c8"]]},{"id":"84edd03f6a8c19ca","type":"switch","z":"21ef1ae50a97d1a7","name":"","property":"payload.commandName","propertyType":"msg","rules":[{"t":"eq","v":"heat pump: Energy DHW kWh","vt":"str"},{"t":"eq","v":"heat pump: Energy DHW MWh","vt":"str"}],"checkall":"false","repair":false,"outputs":2,"x":490,"y":320,"wires":[["d410f6477afd9b74"],["d410f6477afd9b74"]]},{"id":"d410f6477afd9b74","type":"join","z":"21ef1ae50a97d1a7","name":"join kWh & MWh","mode":"custom","build":"array","property":"payload","propertyType":"msg","key":"topic","joiner":"\\n","joinerType":"str","accumulate":false,"timeout":"","count":"2","reduceRight":false,"reduceExp":"","reduceInit":"","reduceInitType":"num","reduceFixup":"","x":670,"y":320,"wires":[["de4544652624a3c0"]]},{"id":"de4544652624a3c0","type":"function","z":"21ef1ae50a97d1a7","name":"energy total ","func":"var count = Object.keys(msg.payload).length;\n\nvar NewMsg = {};\nif (count == 2)\n{\n    var energy = msg.payload[0].state + 1000 * msg.payload[1].state; \n    NewMsg.payload = {\n        \"commandName\": \"heat pump: Energy DHW total kWh\",\n        \"state\": energy\n    };\n};\nreturn NewMsg;\n","outputs":1,"noerr":0,"initialize":"","finalize":"","libs":[],"x":870,"y":320,"wires":[["271d6c1351c1665f"]]},{"id":"e889015e323f42c8","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Heizenergie","entityConfig":"758a28fb933bd946","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":1070,"y":260,"wires":[[]]},{"id":"1dfe82bd89b0988d","type":"comment","z":"21ef1ae50a97d1a7","name":"","info":"Change \n\nFriendly name\n\nfrom \n\nw2c SensorName\n\nto\n\nSensorName\n\n","x":1060,"y":200,"wires":[]},{"id":"271d6c1351c1665f","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Warmwasserenergie","entityConfig":"b95521ee15c7aafb","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":1100,"y":320,"wires":[[]]},{"id":"ae05f0c6686f1c40","type":"switch","z":"21ef1ae50a97d1a7","name":"","property":"payload.commandName","propertyType":"msg","rules":[{"t":"eq","v":"heating circuit: State heating circuit control","vt":"str"},{"t":"eq","v":"heating circuit: Outdoor temperature","vt":"str"},{"t":"eq","v":"heating circuit: Outdoor temperature average value","vt":"str"},{"t":"eq","v":"heating circuit: Setpoint room temperature","vt":"str"},{"t":"eq","v":"heating circuit: Actual heating circuit flow temperature","vt":"str"},{"t":"eq","v":"heating circuit: Setpoint heating circuit flow temperature","vt":"str"}],"checkall":"false","repair":false,"outputs":6,"x":490,"y":520,"wires":[["3f63be95249d5327"],["ab2af7960c17ae15"],["d3b9c4bde290e9f1"],["ced0e175551b4e0a"],["c196b65d9bf84a94"],["fefbfcdece98b2ec"]]},{"id":"a31aa3de4f6283f4","type":"switch","z":"21ef1ae50a97d1a7","name":"","property":"payload.commandName","propertyType":"msg","rules":[{"t":"eq","v":"DHW: State DHW control","vt":"str"},{"t":"eq","v":"DHW: Actual DHW temperature","vt":"str"}],"checkall":"false","repair":false,"outputs":2,"x":490,"y":820,"wires":[["17f0d837ef9828a2"],["61559da33c0ee1c3"]]},{"id":"3f63be95249d5327","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Status Heizkreisregelung","entityConfig":"a9f1bfd9642cf55b","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":790,"y":380,"wires":[[]]},{"id":"ab2af7960c17ae15","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Aussentemperatur","entityConfig":"b2e45e216c94e60d","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":770,"y":440,"wires":[[]]},{"id":"d3b9c4bde290e9f1","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Aussentemperatur Mittelwert","entityConfig":"46f103337d84ed93","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":800,"y":500,"wires":[[]]},{"id":"ced0e175551b4e0a","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Raumtemperatur Sollwert","entityConfig":"b6f342b01312528d","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":790,"y":560,"wires":[[]]},{"id":"c196b65d9bf84a94","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Heizkreis Vorlauftemperatur","entityConfig":"b744d478ba355501","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":800,"y":620,"wires":[[]]},{"id":"fefbfcdece98b2ec","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Heizkreis Vorlauftemperatur Sollwert","entityConfig":"a6c153f62e5bcc95","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":830,"y":680,"wires":[[]]},{"id":"17f0d837ef9828a2","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Status Warmwasserregelung","entityConfig":"008c1805488e52c3","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":800,"y":780,"wires":[[]]},{"id":"61559da33c0ee1c3","type":"ha-sensor","z":"21ef1ae50a97d1a7","name":"Warmwassertemperatur","entityConfig":"c2b71ea9a5b20457","version":0,"state":"payload.state","stateType":"msg","attributes":[],"inputOverride":"allow","outputProperties":[],"x":790,"y":840,"wires":[[]]},{"id":"758a28fb933bd946","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"512d93e94d45acab","name":"Heizenergie","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w2c Heizenergie"},{"property":"icon","value":""},{"property":"entity_category","value":"diagnostic"},{"property":"entity_picture","value":""},{"property":"device_class","value":"energy"},{"property":"unit_of_measurement","value":"kWh"},{"property":"state_class","value":"total_increasing"}],"resend":false,"debugEnabled":false},{"id":"b95521ee15c7aafb","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"512d93e94d45acab","name":"Warmwasserenergie","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w2c Warmwasserenergie"},{"property":"icon","value":""},{"property":"entity_category","value":"diagnostic"},{"property":"entity_picture","value":""},{"property":"device_class","value":"energy"},{"property":"unit_of_measurement","value":"kWh"},{"property":"state_class","value":"total_increasing"}],"resend":false,"debugEnabled":false},{"id":"a9f1bfd9642cf55b","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"512d93e94d45acab","name":"Status Heizkreisregelung","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w2c Status Heizkreisregelung"},{"property":"icon","value":""},{"property":"entity_category","value":"diagnostic"},{"property":"entity_picture","value":""},{"property":"device_class","value":""},{"property":"unit_of_measurement","value":""},{"property":"state_class","value":"measurement"}],"resend":false,"debugEnabled":false},{"id":"b2e45e216c94e60d","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"","name":"Aussentemperatur","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w2c Aussentemperatur"},{"property":"icon","value":""},{"property":"entity_category","value":"diagnostic"},{"property":"entity_picture","value":""},{"property":"device_class","value":"temperature"},{"property":"unit_of_measurement","value":"°C"},{"property":"state_class","value":"measurement"}],"resend":false,"debugEnabled":false},{"id":"46f103337d84ed93","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"512d93e94d45acab","name":"Aussentemperatur Mittelwert","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w2c Aussentemperatur Mittelwert"},{"property":"icon","value":""},{"property":"entity_category","value":"diagnostic"},{"property":"entity_picture","value":""},{"property":"device_class","value":"temperature"},{"property":"unit_of_measurement","value":"°C"},{"property":"state_class","value":"measurement"}],"resend":false,"debugEnabled":false},{"id":"b6f342b01312528d","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"512d93e94d45acab","name":"Raumtemperatur Sollwert","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w2c Raumtemperatur Sollwert"},{"property":"icon","value":""},{"property":"entity_category","value":"config"},{"property":"entity_picture","value":""},{"property":"device_class","value":"temperature"},{"property":"unit_of_measurement","value":"°C"},{"property":"state_class","value":"measurement"}],"resend":false,"debugEnabled":false},{"id":"b744d478ba355501","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"512d93e94d45acab","name":"Heizkreis Vorlauftemperatur","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w2c Heizkreis Vorlauftemperatur"},{"property":"icon","value":""},{"property":"entity_category","value":"diagnostic"},{"property":"entity_picture","value":""},{"property":"device_class","value":"temperature"},{"property":"unit_of_measurement","value":"°C"},{"property":"state_class","value":"measurement"}],"resend":false,"debugEnabled":false},{"id":"a6c153f62e5bcc95","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"512d93e94d45acab","name":"Heizkreis Vorlauftemperatur Sollwert","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w2c Heizkreis Vorlauftemperatur Sollwert"},{"property":"icon","value":""},{"property":"entity_category","value":"config"},{"property":"entity_picture","value":""},{"property":"device_class","value":"temperature"},{"property":"unit_of_measurement","value":"°C"},{"property":"state_class","value":"measurement"}],"resend":false,"debugEnabled":false},{"id":"008c1805488e52c3","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"512d93e94d45acab","name":"Status Warmwasserregelung","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w3c Status Warmwasserregelung"},{"property":"icon","value":""},{"property":"entity_category","value":"diagnostic"},{"property":"entity_picture","value":""},{"property":"device_class","value":""},{"property":"unit_of_measurement","value":""},{"property":"state_class","value":"measurement"}],"resend":false,"debugEnabled":false},{"id":"c2b71ea9a5b20457","type":"ha-entity-config","server":"d20eed2c.b5b69","deviceConfig":"512d93e94d45acab","name":"Warmwassertemperatur","version":"6","entityType":"sensor","haConfig":[{"property":"name","value":"w2c Warmwassertemperatur"},{"property":"icon","value":""},{"property":"entity_category","value":"diagnostic"},{"property":"entity_picture","value":""},{"property":"device_class","value":"temperature"},{"property":"unit_of_measurement","value":"°C"},{"property":"state_class","value":"measurement"}],"resend":false,"debugEnabled":false},{"id":"d20eed2c.b5b69","type":"server","name":"Home Assistant","addon":true},{"id":"512d93e94d45acab","type":"ha-device-config","name":"web2com","hwVersion":"","manufacturer":"Ochsner","model":"RC7020","swVersion":""}]
+[
+    {
+        "id": "21ef1ae50a97d1a7",
+        "type": "tab",
+        "label": "Ochsner Datenlogger",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "de764250bf3ce744",
+        "type": "inject",
+        "z": "21ef1ae50a97d1a7",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "300",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 270,
+        "y": 60,
+        "wires": [
+            [
+                "827182aede622f47"
+            ]
+        ]
+    },
+    {
+        "id": "827182aede622f47",
+        "type": "function",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Parameter list",
+        "func": "var msgList = [];\n\nvar commandList = {\n    \"heat pump: Thermal energy kWh\": \"1/2/1/125/9\",\n    \"heat pump: Thermal energy MWh\": \"1/2/1/125/10\",\n    \"heat pump: Energy DHW kWh\": \"1/2/1/125/11\",\n    \"heat pump: Energy DHW MWh\": \"1/2/1/125/12\",\n    \"heating circuit: State heating circuit control\": \"1/2/4/119/0\",\n    \"heating circuit: Outdoor temperature\": \"1/2/4/119/1\",\n    \"heating circuit: Outdoor temperature average value\": \"1/2/4/119/2\",\n    \"heating circuit: Setpoint room temperature\": \"1/2/4/119/3\",\n    \"heating circuit: Actual heating circuit flow temperature\": \"1/2/4/119/4\",\n    \"heating circuit: Setpoint heating circuit flow temperature\": \"1/2/4/119/5\",\n    \"DHW: State DHW control\": \"1/2/7/121/0\",\n    \"DHW: Actual DHW temperature\": \"1/2/7/121/1\",\n    \"DHW: DHW setpoint\": \"1/2/7/121/2\",\n };\n\nvar count = Object.keys(commandList).length;\n\nfor (var i=0;i<count;i++) {\n    var firstKey = Object.keys(commandList)[i];\n    var firstValue = commandList[firstKey];\n    var outputMsg = {\n        \"commandName\": firstKey,\n        \"commandId\": firstValue\n    };\n    msgList.push({payload:outputMsg})\n}\nreturn [msgList];",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 260,
+        "y": 120,
+        "wires": [
+            [
+                "2a5bcdb6aed36c67"
+            ]
+        ]
+    },
+    {
+        "id": "26204111a9c07bde",
+        "type": "function",
+        "z": "21ef1ae50a97d1a7",
+        "name": "SOAP Params",
+        "func": "msg.commandId = msg.payload.commandId;\nmsg.commandName = msg.payload.commandName;\n\nmsg.headers = {};\nmsg.headers={ \n    'Content-Type': 'text/xml'\n};\n\nmsg.payload ='<?xml version=\"1.0\" encoding=\"UTF-8\"?>'+'\\n'\nmsg.payload+='<SOAP-ENV:Envelope'+'\\n'\nmsg.payload+='xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"'+'\\n'\nmsg.payload+='xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\"'+'\\n'\nmsg.payload+='xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"'+'\\n'\nmsg.payload+='xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"'+'\\n'\nmsg.payload+='xmlns:ns=\"http://ws01.lom.ch/soap/\">'+'\\n'\nmsg.payload+='<SOAP-ENV:Body>'+'\\n'\nmsg.payload+='<ns:getDpRequest>'+'\\n'\nmsg.payload+='<ref>'+'\\n'\nmsg.payload+='<oid>'+msg.commandId+'</oid>'+'\\n'\nmsg.payload+='<prop/>'+'\\n'\nmsg.payload+='</ref>'+'\\n'\nmsg.payload+='<startIndex>0</startIndex>'+'\\n'\nmsg.payload+='<count>20</count>'+'\\n'\nmsg.payload+='</ns:getDpRequest>'+'\\n'\nmsg.payload+='</SOAP-ENV:Body>'+'\\n';\nmsg.payload+='</SOAP-ENV:Envelope>'+'\\n';\n\n\nreturn msg",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 260,
+        "y": 240,
+        "wires": [
+            [
+                "78dc706d803d3c1a"
+            ]
+        ]
+    },
+    {
+        "id": "78dc706d803d3c1a",
+        "type": "http request",
+        "z": "21ef1ae50a97d1a7",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://192.168.188.50/ws",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "digest",
+        "senderr": false,
+        "headers": [],
+        "x": 270,
+        "y": 300,
+        "wires": [
+            [
+                "93fc9f62d9ed586c"
+            ]
+        ]
+    },
+    {
+        "id": "93fc9f62d9ed586c",
+        "type": "xml",
+        "z": "21ef1ae50a97d1a7",
+        "name": "",
+        "property": "payload",
+        "attr": "",
+        "chr": "",
+        "x": 290,
+        "y": 360,
+        "wires": [
+            [
+                "3cdf6ba2fa8d0d84"
+            ]
+        ]
+    },
+    {
+        "id": "3cdf6ba2fa8d0d84",
+        "type": "function",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Extract value",
+        "func": "var payload=msg.payload;\n\nvar NewMsg={};\nNewMsg.payload = {\n    \"commandName\": msg.commandName,\n    \"state\" : Number(payload[\"SOAP-ENV:Envelope\"][\"SOAP-ENV:Body\"][0][\"ns:getDpResponse\"][0].dpCfg[0].value[0])\n};\n\nreturn NewMsg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 290,
+        "y": 420,
+        "wires": [
+            [
+                "f7e67051f5d7fe8e",
+                "84edd03f6a8c19ca",
+                "ae05f0c6686f1c40",
+                "a31aa3de4f6283f4"
+            ]
+        ]
+    },
+    {
+        "id": "2a5bcdb6aed36c67",
+        "type": "delay",
+        "z": "21ef1ae50a97d1a7",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "5",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 240,
+        "y": 180,
+        "wires": [
+            [
+                "26204111a9c07bde"
+            ]
+        ]
+    },
+    {
+        "id": "f7e67051f5d7fe8e",
+        "type": "switch",
+        "z": "21ef1ae50a97d1a7",
+        "name": "",
+        "property": "payload.commandName",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "heat pump: Thermal energy kWh",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "heat pump: Thermal energy MWh",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 490,
+        "y": 260,
+        "wires": [
+            [
+                "04ab5286cc606ce5"
+            ],
+            [
+                "04ab5286cc606ce5"
+            ]
+        ]
+    },
+    {
+        "id": "563741e30b26bc72",
+        "type": "comment",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Paramter list",
+        "info": "    \"heat pump: State heat generator control\": \"/1/2/1/125/0\",\n    \"heat pump: Flow temperature heat generator\": \"/1/2/1/125/1\",\n    \"heat pump: Return flow temperature heat generator\": \"/1/2/1/125/2\",\n    \"heat pump: Heat source outlet temperature\": \"/1/2/1/125/3\",\n    \"heat pump: Heat source inlet temperature\": \"/1/2/1/125/4\",\n    \"heat pump: Operation cycles\": \"/1/2/1/125/5\",\n    \"heat pump: Operation hours\": \"/1/2/1/125/6\",\n    \"heat pump: Volume flow heat energy\": \"/1/2/1/125/7\",\n    \"heat pump: Flow rate heat source\": \"/1/2/1/125/8\",\n    \"heat pump: Thermal energy kWh\": \"1/2/1/125/9\",\n    \"heat pump: Thermal energy MWh\": \"1/2/1/125/10\",\n    \"heat pump: Energy DHW kWh\": \"1/2/1/125/11\",\n    \"heat pump: Energy DHW MWh\": \"1/2/1/125/12\",\n    \"auxiliary: State heat generator control\": \"/1/2/2/126/0\",\n    \"auxiliary: Flow temperature heat generator\": \"/1/2/2/126/1\",\n    \"auxiliary: Operation cycles\": \"/1/2/2/126/2\",\n    \"auxiliary: Operation hours\": \"/1/2/2/126/3\",\n    \"auxiliary: Thermal energy kWh\": \"/1/2/2/126/3\",\n    \"auxiliary: Thermal energy MWh\": \"/1/2/2/126/3\",\n    \"heating circuit: State heating circuit control\": \"1/2/4/119/0\",\n    \"heating circuit: Outdoor temperature\": \"1/2/4/119/1\",\n    \"heating circuit: Outdoor temperature average value\": \"1/2/4/119/2\",\n    \"heating circuit: Setpoint room temperature\": \"1/2/4/119/3\",\n    \"heating circuit: Actual heating circuit flow temperature\": \"1/2/4/119/4\",\n    \"heating circuit: Setpoint heating circuit flow temperature\": \"1/2/4/119/5\",\n    \"DHW: State DHW control\": \"1/2/7/121/0\",\n    \"DHW: Actual DHW temperature\": \"1/2/7/121/1\",\n    \"DHW: DHW setpoint\": \"1/2/7/121/2\",\n    \"Manager: Storage tank temperature center\": \"1/2/8/122/1\",\n    \"Manager: Plant flow temperature\": \"1/2/8/122/2\",\n    \"Manager: Plant CH setpoint flow temperature\": \"1/2/8/122/3\",\n    \"Manager: Heating power in heating mode\": \"1/2/8/122/4\",\n    \"Manager: Heating power in DHW mode\": \"1/2/8/122/5\",\n    \"Manager: State heating manager\": \"1/2/8/122/6\",\n    \"Manager: Storage tank temperature top\": \"1/2/8/122/6\",",
+        "x": 490,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "04ab5286cc606ce5",
+        "type": "join",
+        "z": "21ef1ae50a97d1a7",
+        "name": "join kWh & MWh",
+        "mode": "custom",
+        "build": "array",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "",
+        "count": "2",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "num",
+        "reduceFixup": "",
+        "x": 670,
+        "y": 260,
+        "wires": [
+            [
+                "896b506461f3d464"
+            ]
+        ]
+    },
+    {
+        "id": "896b506461f3d464",
+        "type": "function",
+        "z": "21ef1ae50a97d1a7",
+        "name": "energy total ",
+        "func": "var count = Object.keys(msg.payload).length;\n\nvar NewMsg = {};\nif (count == 2)\n{\n    var energy = msg.payload[0].state + 1000 * msg.payload[1].state; \n    NewMsg.payload = {\n        \"commandName\": \"heat pump: Thermal energy total kWh\",\n        \"state\": energy\n    };\n};\nreturn NewMsg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 870,
+        "y": 260,
+        "wires": [
+            [
+                "e889015e323f42c8"
+            ]
+        ]
+    },
+    {
+        "id": "84edd03f6a8c19ca",
+        "type": "switch",
+        "z": "21ef1ae50a97d1a7",
+        "name": "",
+        "property": "payload.commandName",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "heat pump: Energy DHW kWh",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "heat pump: Energy DHW MWh",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 490,
+        "y": 320,
+        "wires": [
+            [
+                "d410f6477afd9b74"
+            ],
+            [
+                "d410f6477afd9b74"
+            ]
+        ]
+    },
+    {
+        "id": "d410f6477afd9b74",
+        "type": "join",
+        "z": "21ef1ae50a97d1a7",
+        "name": "join kWh & MWh",
+        "mode": "custom",
+        "build": "array",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "",
+        "count": "2",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "num",
+        "reduceFixup": "",
+        "x": 670,
+        "y": 320,
+        "wires": [
+            [
+                "de4544652624a3c0"
+            ]
+        ]
+    },
+    {
+        "id": "de4544652624a3c0",
+        "type": "function",
+        "z": "21ef1ae50a97d1a7",
+        "name": "energy total ",
+        "func": "var count = Object.keys(msg.payload).length;\n\nvar NewMsg = {};\nif (count == 2)\n{\n    var energy = msg.payload[0].state + 1000 * msg.payload[1].state; \n    NewMsg.payload = {\n        \"commandName\": \"heat pump: Energy DHW total kWh\",\n        \"state\": energy\n    };\n};\nreturn NewMsg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 870,
+        "y": 320,
+        "wires": [
+            [
+                "271d6c1351c1665f"
+            ]
+        ]
+    },
+    {
+        "id": "e889015e323f42c8",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Heizenergie",
+        "entityConfig": "758a28fb933bd946",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 1070,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1dfe82bd89b0988d",
+        "type": "comment",
+        "z": "21ef1ae50a97d1a7",
+        "name": "",
+        "info": "Change \n\nFriendly name\n\nfrom \n\nw2c SensorName\n\nto\n\nSensorName\n\n",
+        "x": 1060,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "271d6c1351c1665f",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Warmwasserenergie",
+        "entityConfig": "b95521ee15c7aafb",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 1100,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ae05f0c6686f1c40",
+        "type": "switch",
+        "z": "21ef1ae50a97d1a7",
+        "name": "",
+        "property": "payload.commandName",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "heating circuit: State heating circuit control",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "heating circuit: Outdoor temperature",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "heating circuit: Outdoor temperature average value",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "heating circuit: Setpoint room temperature",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "heating circuit: Actual heating circuit flow temperature",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "heating circuit: Setpoint heating circuit flow temperature",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 6,
+        "x": 490,
+        "y": 520,
+        "wires": [
+            [
+                "3f63be95249d5327"
+            ],
+            [
+                "ab2af7960c17ae15"
+            ],
+            [
+                "d3b9c4bde290e9f1"
+            ],
+            [
+                "ced0e175551b4e0a"
+            ],
+            [
+                "c196b65d9bf84a94"
+            ],
+            [
+                "fefbfcdece98b2ec"
+            ]
+        ]
+    },
+    {
+        "id": "a31aa3de4f6283f4",
+        "type": "switch",
+        "z": "21ef1ae50a97d1a7",
+        "name": "",
+        "property": "payload.commandName",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "DHW: State DHW control",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "DHW: Actual DHW temperature",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 490,
+        "y": 820,
+        "wires": [
+            [
+                "17f0d837ef9828a2"
+            ],
+            [
+                "61559da33c0ee1c3"
+            ]
+        ]
+    },
+    {
+        "id": "3f63be95249d5327",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Status Heizkreisregelung",
+        "entityConfig": "a9f1bfd9642cf55b",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 790,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ab2af7960c17ae15",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Aussentemperatur",
+        "entityConfig": "b2e45e216c94e60d",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 770,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d3b9c4bde290e9f1",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Aussentemperatur Mittelwert",
+        "entityConfig": "46f103337d84ed93",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 800,
+        "y": 500,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ced0e175551b4e0a",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Raumtemperatur Sollwert",
+        "entityConfig": "b6f342b01312528d",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 790,
+        "y": 560,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c196b65d9bf84a94",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Heizkreis Vorlauftemperatur",
+        "entityConfig": "b744d478ba355501",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 800,
+        "y": 620,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fefbfcdece98b2ec",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Heizkreis Vorlauftemperatur Sollwert",
+        "entityConfig": "a6c153f62e5bcc95",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 830,
+        "y": 680,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "17f0d837ef9828a2",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Status Warmwasserregelung",
+        "entityConfig": "008c1805488e52c3",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 800,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "61559da33c0ee1c3",
+        "type": "ha-sensor",
+        "z": "21ef1ae50a97d1a7",
+        "name": "Warmwassertemperatur",
+        "entityConfig": "c2b71ea9a5b20457",
+        "version": 0,
+        "state": "payload.state",
+        "stateType": "msg",
+        "attributes": [],
+        "inputOverride": "allow",
+        "outputProperties": [],
+        "x": 790,
+        "y": 840,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "758a28fb933bd946",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "512d93e94d45acab",
+        "name": "Heizenergie",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w2c Heizenergie"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "diagnostic"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "energy"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "kWh"
+            },
+            {
+                "property": "state_class",
+                "value": "total_increasing"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "b95521ee15c7aafb",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "512d93e94d45acab",
+        "name": "Warmwasserenergie",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w2c Warmwasserenergie"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "diagnostic"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "energy"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "kWh"
+            },
+            {
+                "property": "state_class",
+                "value": "total_increasing"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "a9f1bfd9642cf55b",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "512d93e94d45acab",
+        "name": "Status Heizkreisregelung",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w2c Status Heizkreisregelung"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "diagnostic"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": ""
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": ""
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "b2e45e216c94e60d",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "",
+        "name": "Aussentemperatur",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w2c Aussentemperatur"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "diagnostic"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "temperature"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "°C"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "46f103337d84ed93",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "512d93e94d45acab",
+        "name": "Aussentemperatur Mittelwert",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w2c Aussentemperatur Mittelwert"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "diagnostic"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "temperature"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "°C"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "b6f342b01312528d",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "512d93e94d45acab",
+        "name": "Raumtemperatur Sollwert",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w2c Raumtemperatur Sollwert"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "config"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "temperature"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "°C"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "b744d478ba355501",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "512d93e94d45acab",
+        "name": "Heizkreis Vorlauftemperatur",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w2c Heizkreis Vorlauftemperatur"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "diagnostic"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "temperature"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "°C"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "a6c153f62e5bcc95",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "512d93e94d45acab",
+        "name": "Heizkreis Vorlauftemperatur Sollwert",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w2c Heizkreis Vorlauftemperatur Sollwert"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "config"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "temperature"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "°C"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "008c1805488e52c3",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "512d93e94d45acab",
+        "name": "Status Warmwasserregelung",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w3c Status Warmwasserregelung"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "diagnostic"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": ""
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": ""
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "c2b71ea9a5b20457",
+        "type": "ha-entity-config",
+        "server": "d20eed2c.b5b69",
+        "deviceConfig": "512d93e94d45acab",
+        "name": "Warmwassertemperatur",
+        "version": "6",
+        "entityType": "sensor",
+        "haConfig": [
+            {
+                "property": "name",
+                "value": "w2c Warmwassertemperatur"
+            },
+            {
+                "property": "icon",
+                "value": ""
+            },
+            {
+                "property": "entity_category",
+                "value": "diagnostic"
+            },
+            {
+                "property": "entity_picture",
+                "value": ""
+            },
+            {
+                "property": "device_class",
+                "value": "temperature"
+            },
+            {
+                "property": "unit_of_measurement",
+                "value": "°C"
+            },
+            {
+                "property": "state_class",
+                "value": "measurement"
+            }
+        ],
+        "resend": false,
+        "debugEnabled": false
+    },
+    {
+        "id": "d20eed2c.b5b69",
+        "type": "server",
+        "name": "Home Assistant",
+        "addon": true
+    },
+    {
+        "id": "512d93e94d45acab",
+        "type": "ha-device-config",
+        "name": "web2com",
+        "hwVersion": "",
+        "manufacturer": "Ochsner",
+        "model": "RC7020",
+        "swVersion": ""
+    }
+]
