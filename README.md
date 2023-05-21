@@ -66,8 +66,7 @@ In diesem Fenster besteht auch die Möglichkeit den Sensor für HA zu löschen (
 Nachdem alle Einstellung durchgeführt sind kann die Node-RED Konfiguration übernommen werden.
 
 
-
-
+![overview](overview.png)
 
 
 
