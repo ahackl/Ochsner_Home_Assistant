@@ -1,0 +1,118 @@
+[
+    {
+        "id": "a0e5a722d82de9fd",
+        "type": "tab",
+        "label": "web2com write test",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "d25bca4f4feea2a3",
+        "type": "debug",
+        "z": "a0e5a722d82de9fd",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 220,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "a74d6fb5d4473c11",
+        "type": "function",
+        "z": "a0e5a722d82de9fd",
+        "name": "SOAP Params",
+        "func": "msg.commandId = msg.payload.commandId;\nmsg.commandIndex = msg.payload.commandIndex;\nmsg.commandValue = msg.payload.commandValue;\nmsg.commandName = msg.payload.commandName;\n\nmsg.headers = {};\nmsg.headers={ \n    'Content-Type': 'text/xml'\n};\n\nmsg.payload ='<?xml version=\"1.0\" encoding=\"UTF-8\"?>'+'\\n'\nmsg.payload +='<SOAP-ENV:Envelope'+'\\n'\nmsg.payload +='xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"'+'\\n'\nmsg.payload +='xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\"'+'\\n'\nmsg.payload +='xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"'+'\\n'\nmsg.payload +='xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"'+'\\n'\nmsg.payload +='xmlns:ns=\"http://ws01.lom.ch/soap/\">'+'\\n'\nmsg.payload +='<SOAP-ENV:Body>'+'\\n'\nmsg.payload += '<ns:writeDpRequest>' + '\\n';\nmsg.payload += '<ref>' + '\\n';\nmsg.payload += '<oid>' + msg.commandId + '</oid>' + '\\n';\nmsg.payload += '<prop/>' + '\\n';\nmsg.payload += '</ref>' + '\\n';\nmsg.payload += '<dp>' + '\\n';\nmsg.payload += '<index>' + msg.commandIndex +'</index>' + '\\n';\nmsg.payload += '<name/>' + '\\n';\nmsg.payload += '<prop/>' + '\\n';\nmsg.payload += '<desc/>' + '\\n';\nmsg.payload += '<value>' + msg.commandValue + '</value>' + '\\n';\nmsg.payload += '<unit/>' + '\\n';\nmsg.payload += '<timestamp>0</timestamp>' + '\\n';\nmsg.payload += '</dp>' + '\\n';\nmsg.payload += '</ns:writeDpRequest>' + '\\n';\nmsg.payload += '</SOAP-ENV:Body>' + '\\n';\nmsg.payload += '</SOAP-ENV:Envelope>' + '\\n';\n\nreturn msg",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 220,
+        "wires": [
+            [
+                "cf43338f6232d073"
+            ]
+        ]
+    },
+    {
+        "id": "9e809b323f8c1847",
+        "type": "inject",
+        "z": "a0e5a722d82de9fd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "300",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 60,
+        "wires": [
+            [
+                "8fd70417ca68a7d9"
+            ]
+        ]
+    },
+    {
+        "id": "8fd70417ca68a7d9",
+        "type": "function",
+        "z": "a0e5a722d82de9fd",
+        "name": "Normal Raumtemperatur Heizbetrieb",
+        "func": "var msgList = [];\n\nvar outputMsg = {\n    \"commandName\": \"Normal Raumtemperatur Heizbetrieb\",\n    \"commandId\": \"/1/2/4/99/6\",\n    \"commandIndex\": \"6\",\n    \"commandValue\": \"16.0\"\n};\n\nmsgList.push({ payload: outputMsg });\n\nreturn [msgList];",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 310,
+        "y": 140,
+        "wires": [
+            [
+                "a74d6fb5d4473c11"
+            ]
+        ]
+    },
+    {
+        "id": "cf43338f6232d073",
+        "type": "http request",
+        "z": "a0e5a722d82de9fd",
+        "name": "",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://192.168.188.50/ws",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "digest",
+        "senderr": false,
+        "headers": [],
+        "x": 230,
+        "y": 280,
+        "wires": [
+            [
+                "d25bca4f4feea2a3"
+            ]
+        ]
+    }
+]
