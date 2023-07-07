@@ -199,7 +199,7 @@
         "type": "comment",
         "z": "21ef1ae50a97d1a7",
         "name": "Paramter list",
-        "info": "    \"heat pump: State heat generator control\": \"/1/2/1/125/0\",\n    \"heat pump: Flow temperature heat generator\": \"/1/2/1/125/1\",\n    \"heat pump: Return flow temperature heat generator\": \"/1/2/1/125/2\",\n    \"heat pump: Heat source outlet temperature\": \"/1/2/1/125/3\",\n    \"heat pump: Heat source inlet temperature\": \"/1/2/1/125/4\",\n    \"heat pump: Operation cycles\": \"/1/2/1/125/5\",\n    \"heat pump: Operation hours\": \"/1/2/1/125/6\",\n    \"heat pump: Volume flow heat energy\": \"/1/2/1/125/7\",\n    \"heat pump: Flow rate heat source\": \"/1/2/1/125/8\",\n    \"heat pump: Thermal energy kWh\": \"1/2/1/125/9\",\n    \"heat pump: Thermal energy MWh\": \"1/2/1/125/10\",\n    \"heat pump: Energy DHW kWh\": \"1/2/1/125/11\",\n    \"heat pump: Energy DHW MWh\": \"1/2/1/125/12\",\n    \"auxiliary: State heat generator control\": \"/1/2/2/126/0\",\n    \"auxiliary: Flow temperature heat generator\": \"/1/2/2/126/1\",\n    \"auxiliary: Operation cycles\": \"/1/2/2/126/2\",\n    \"auxiliary: Operation hours\": \"/1/2/2/126/3\",\n    \"auxiliary: Thermal energy kWh\": \"/1/2/2/126/3\",\n    \"auxiliary: Thermal energy MWh\": \"/1/2/2/126/3\",\n    \"heating circuit: State heating circuit control\": \"1/2/4/119/0\",\n    \"heating circuit: Outdoor temperature\": \"1/2/4/119/1\",\n    \"heating circuit: Outdoor temperature average value\": \"1/2/4/119/2\",\n    \"heating circuit: Setpoint room temperature\": \"1/2/4/119/3\",\n    \"heating circuit: Actual heating circuit flow temperature\": \"1/2/4/119/4\",\n    \"heating circuit: Setpoint heating circuit flow temperature\": \"1/2/4/119/5\",\n    \"DHW: State DHW control\": \"1/2/7/121/0\",\n    \"DHW: Actual DHW temperature\": \"1/2/7/121/1\",\n    \"DHW: DHW setpoint\": \"1/2/7/121/2\",\n    \"Manager: Storage tank temperature center\": \"1/2/8/122/1\",\n    \"Manager: Plant flow temperature\": \"1/2/8/122/2\",\n    \"Manager: Plant CH setpoint flow temperature\": \"1/2/8/122/3\",\n    \"Manager: Heating power in heating mode\": \"1/2/8/122/4\",\n    \"Manager: Heating power in DHW mode\": \"1/2/8/122/5\",\n    \"Manager: State heating manager\": \"1/2/8/122/6\",\n    \"Manager: Storage tank temperature top\": \"1/2/8/122/6\",",
+        "info": "    \"heat pump: State heat generator control\": \"/1/2/1/125/0\",\n    \"heat pump: Flow temperature heat generator\": \"/1/2/1/125/1\",\n    \"heat pump: Return flow temperature heat generator\": \"/1/2/1/125/2\",\n    \"heat pump: Heat source outlet temperature\": \"/1/2/1/125/3\",\n    \"heat pump: Heat source inlet temperature\": \"/1/2/1/125/4\",\n    \"heat pump: Operation cycles\": \"/1/2/1/125/5\",\n    \"heat pump: Operation hours\": \"/1/2/1/125/6\",\n    \"heat pump: Volume flow heat energy\": \"/1/2/1/125/7\",\n    \"heat pump: Flow rate heat source\": \"/1/2/1/125/8\",\n    \"heat pump: Thermal energy kWh\": \"/1/2/1/125/9\",\n    \"heat pump: Thermal energy MWh\": \"/1/2/1/125/10\",\n    \"heat pump: Energy DHW kWh\": \"/1/2/1/125/11\",\n    \"heat pump: Energy DHW MWh\": \"/1/2/1/125/12\",\n    \"auxiliary: State heat generator control\": \"/1/2/2/126/0\",\n    \"auxiliary: Flow temperature heat generator\": \"/1/2/2/126/1\",\n    \"auxiliary: Operation cycles\": \"/1/2/2/126/2\",\n    \"auxiliary: Operation hours\": \"/1/2/2/126/3\",\n    \"auxiliary: Thermal energy kWh\": \"/1/2/2/126/3\",\n    \"auxiliary: Thermal energy MWh\": \"/1/2/2/126/3\",\n    \"heating circuit: State heating circuit control\": \"/1/2/4/119/0\",\n    \"heating circuit: Outdoor temperature\": \"/1/2/4/119/1\",\n    \"heating circuit: Outdoor temperature average value\": \"/1/2/4/119/2\",\n    \"heating circuit: Setpoint room temperature\": \"/1/2/4/119/3\",\n    \"heating circuit: Actual heating circuit flow temperature\": \"/1/2/4/119/4\",\n    \"heating circuit: Setpoint heating circuit flow temperature\": \"/1/2/4/119/5\",\n    \"DHW: State DHW control\": \"/1/2/7/121/0\",\n    \"DHW: Actual DHW temperature\": \"/1/2/7/121/1\",\n    \"DHW: DHW setpoint\": \"/1/2/7/121/2\",\n    \"Manager: Storage tank temperature top\": \"/1/2/8/122/0\",  \n    \"Manager: Storage tank temperature center\": \"/1/2/8/122/1\",\n    \"Manager: Plant flow temperature\": \"/1/2/8/122/2\",\n    \"Manager: Plant CH setpoint flow temperature\": \"/1/2/8/122/3\",\n    \"Manager: Heating power in heating mode\": \"/1/2/8/122/4\",\n    \"Manager: Heating power in DHW mode\": \"/1/2/8/122/5\",\n    \"Manager: State heating manager\": \"/1/2/8/122/6\",\n",
         "x": 490,
         "y": 120,
         "wires": []
@@ -749,7 +749,7 @@
         "deviceConfig": "",
         "name": "Aussentemperatur",
         "version": "6",
-        "entityType": "sensor",
+        "entityType": "button",
         "haConfig": [
             {
                 "property": "name",
@@ -761,7 +761,7 @@
             },
             {
                 "property": "entity_category",
-                "value": "diagnostic"
+                "value": "config"
             },
             {
                 "property": "entity_picture",
@@ -769,19 +769,11 @@
             },
             {
                 "property": "device_class",
-                "value": "temperature"
-            },
-            {
-                "property": "unit_of_measurement",
-                "value": "°C"
-            },
-            {
-                "property": "state_class",
-                "value": "measurement"
+                "value": "update"
             }
         ],
         "resend": false,
-        "debugEnabled": false
+        "debugEnabled": true
     },
     {
         "id": "46f103337d84ed93",
